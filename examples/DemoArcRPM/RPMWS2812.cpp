@@ -1,5 +1,6 @@
 /// 
 ///  Created for personal use, use it at your own risk and benefit.
+///  https://github.com/GitMoDu/RPMWS2812
 ///  Based on the excellent work by Kasper Kamperman(https://www.kasperkamperman.com)
 ///  Depends on Light_WS2812 https://github.com/cpldcpu/light_ws2812
 /// 
