@@ -2,6 +2,9 @@
 /// 
 ///  Created for personal use, use it at your own risk and benefit.
 /// 
+#define X9_CS_PIN 3
+#define X9_UD_PIN 4
+#define X9_INC_PIN 5
 
 #include "PinDefinitions.h"
 #include "LedDefinitions.h"
@@ -9,138 +12,239 @@
 #include "FastColour.h"
 #include "LedSection.h"
 #include "RPMWS2812.h"
-#include <NeoSWSerial.h>
+//#include <NeoSerial.h>
 //#include <SoftwareSerial.h>
 
-#define SERIAL_BAUD_RATE 19200
-#define BRIGHTNESS 40 //Out of 254
-#define DEMO_REFRESH_PERIOD_MILLIS 30
+#define SERIAL_BAUD_RATE 115200
+#define STARTING_BRIGHTNESS 150 //Out of 255
 
-#define DEMO_RPM_RANGE 16000
+#define ANIMATION_STEPS 6000
+#define DEMO_RPM_RANGE 19000
 
-#define ANIMATION_DURATION 7600
-#define ANIMATION_UPDATE_INTERVAL 10
-#define DEMO_RPM_UPDATE_INTERVAL 20
-#define DEMO_LED_UPDATE_INTERVAL 20
-#define DEMO_RPM_LOG_UPDATE_INTERVAL 500
-#define ANIMATION_STEPS 5000
+#define ANIMATION_DURATION 12000
+#define ANIMATION_UPDATE_INTERVAL 5
+#define DEMO_RPM_UPDATE_INTERVAL  5
+#define DEMO_LED_UPDATE_INTERVAL 1
+#define DEMO_RPM_LOG_UPDATE_INTERVAL 400
+#define BRIGHTNESS_UPDATE_INTERVAL 30
+#define SERIAL_POLL_INTERVAL 5
 
+#define POWER_AVERAGE_SAMPLES 10
 
 //Sections data
 #define MEDIUM_RPM 9000
 #define HIGH_RPM 13000
 #define MAX_RPM 15000
 
-#define LOW_COLOUR cHSV(240, 254, 254)
-#define MEDIUM_COLOUR cHSV(100, 254, 254)
-#define HIGH_COLOUR cHSV(120, 254, 254)
+#define ALERT_PULSE_MILLIS 110
+#define ALERT_PULSE_DUTY_CYCLE 160
+#define ALERT_MIN_BRIGHTNESS 60
 
-NeoSWSerial SWSerial(0, 1);
-//SoftwareSerial SWSerial(4, 3);
+#define LOW_COLOUR cHSV(240, 255, 255)
+#define MEDIUM_COLOUR cHSV(100, 255, 255)
+#define HIGH_COLOUR cHSV(120, 255, 255)
+#define BACKGROUND_COLOUR cHSV(240, 255, 5)
+#define LED_MIN_BRIGHTNESS_VALUE 20
+
+
+
+//NeoSerial Serial(0, 1);
+//SoftwareSerial Serial(4, 3);
+String inputString = "";         // a string to hold incoming data
+boolean stringComplete = false;  // whether the string is complete
+
+
 RPMWS2812 RPMDriver;
 
-void Demo()
+uint8_t GlobalBrightness = STARTING_BRIGHTNESS;
+
+//Mostly demo stuff
+uint16_t DemoRPM = 0;
+uint16_t AnimationStep = 0;
+uint32_t StartTime, RPMStart, RPMEnd;
+uint32_t Now;
+uint32_t AnimationStart;
+uint32_t LastRPMUpdate, LastLEDUpdate, LastAnimationUpdate, LastRPMLogUpdate,
+LastPowerUpdate, LastPowerLogUpdate, LastBrightnessUpdate, LastSerialUpdate;
+uint64_t LastPowerSum = 0;
+uint32_t LastAveragePower = 0;
+uint16_t PowerSumCounter = 0;
+
+
+void SetupDemo()
 {
-
-	uint16_t DemoRPM, AnimationStep = 0;
-	uint32_t StartTime, RPMStart, RPMEnd;
-	uint32_t Elapsed;
-	uint32_t AnimationStart;
-	uint32_t LastRPMUpdate, LastLEDUpdate, LastAnimationUpdate, LastRPMLogUpdate;
+	AnimationStep = 0;
 
 	StartTime = millis();
+
 	LastLEDUpdate = StartTime;
-
-
-	StartTime = millis();
 	LastRPMUpdate = StartTime;
 	LastLEDUpdate = StartTime;
 	LastAnimationUpdate = StartTime;
-	AnimationStep = 0;
 	AnimationStart = StartTime;
-
-	while (true)
+	LastPowerUpdate = StartTime;
+	LastPowerLogUpdate = StartTime;
+	LastRPMLogUpdate = StartTime;
+	LastBrightnessUpdate = StartTime;
+	LastSerialUpdate = StartTime;
+}
+void Demo(uint32_t now)
+{
+	if (now - LastAnimationUpdate > ANIMATION_UPDATE_INTERVAL - 1)
 	{
-		Elapsed = millis();
+		LastAnimationUpdate += ANIMATION_UPDATE_INTERVAL;
 
-		if (Elapsed - LastLEDUpdate > DEMO_LED_UPDATE_INTERVAL - 1)
+		AnimationStep = ((ANIMATION_STEPS*(now - AnimationStart)) / ANIMATION_DURATION);
+
+		if (now - AnimationStart > ANIMATION_DURATION - 1)
 		{
-			LastLEDUpdate += DEMO_LED_UPDATE_INTERVAL;
-			RPMDriver.Show();
-		}
-
-		if (Elapsed - LastRPMLogUpdate > DEMO_RPM_LOG_UPDATE_INTERVAL - 1)
-		{
-			LastRPMLogUpdate += DEMO_RPM_LOG_UPDATE_INTERVAL;
-			SWSerial.print("RPM: ");
-			SWSerial.println(DemoRPM);
-		}
-
-		if (Elapsed - LastRPMUpdate > DEMO_RPM_UPDATE_INTERVAL - 1)
-		{
-			LastRPMUpdate += DEMO_RPM_UPDATE_INTERVAL;
-
-			if (AnimationStep < ANIMATION_STEPS / 2)
-			{
-				DemoRPM = AnimationStep * 2 * ((DEMO_RPM_RANGE) / ANIMATION_STEPS);
-			}
-			else
-			{
-				DemoRPM = (ANIMATION_STEPS - AnimationStep) * 2 * (DEMO_RPM_RANGE / ANIMATION_STEPS);
-			}
-
-			RPMStart = micros();
-			RPMDriver.UpdateRPM(DemoRPM, false);
-			//SWSerial.println(RPMDriver.Debug());
-			RPMEnd = micros();
-			SWSerial.print("Update RPM took: ");
-			SWSerial.print((RPMEnd - RPMStart));
-			SWSerial.println(" us");
-		}
-
-		if (Elapsed - LastAnimationUpdate > ANIMATION_UPDATE_INTERVAL - 1)
-		{
-			LastAnimationUpdate += ANIMATION_UPDATE_INTERVAL;
-
-			AnimationStep = ((ANIMATION_STEPS*(Elapsed - AnimationStart)) / ANIMATION_DURATION);
-
-			if (Elapsed - AnimationStart > ANIMATION_DURATION - 1)
-			{
-				AnimationStep = 0;
-				SWSerial.print(F("Animation end, took "));
-				SWSerial.print((int32_t)(Elapsed - AnimationStart), DEC);
-				SWSerial.println(F(" ms"));
-				AnimationStart = Elapsed;
-			}
+			AnimationStep = 0;
+			Serial.print(F("Animation end, took "));
+			Serial.print((int32_t)(now - AnimationStart), DEC);
+			Serial.println(F(" ms"));
+			AnimationStart = now;
 		}
 	}
+}
 
+
+void serialEvent() {
+	while (Serial.available()) {
+		// get the new byte:
+		char inChar = (char)Serial.read();
+		// add it to the inputString:
+		inputString += inChar;
+		// if the incoming character is a newline, set a flag
+		// so the main loop can do something about it:
+		if (inChar == '\n') {
+			stringComplete = true;
+		}
+	}
+}
+
+void UpdateSerial()
+{
+	int NewBrightness = inputString.toInt();
+
+	GlobalBrightness = constrain(NewBrightness, 0, 255);
+
+	inputString = "";
+	stringComplete = false;
+	
+}
+
+void UpdateBrightness()
+{
+	RPMDriver.SetBrightness(GlobalBrightness);
+	//RPMDriver.SetExtendedOverflowRange(constrain(GlobalBrightness + 5, 0, 255));
+	RPMDriver.SetAlertBlink(GetAlertBrightness());
+	//Serial.print("GlobalBrightness: ");
+	//Serial.println(GlobalBrightness);
 }
 
 void setup()
 {
-	SWSerial.begin(SERIAL_BAUD_RATE);
-	delay(10);
-	SWSerial.println();
-	SWSerial.println(F("RPM setup"));
 
-	RPMDriver.AddLogger(&SWSerial);
-	RPMDriver.Begin();
-	RPMDriver.SetDesignModel(SUB_PIXEL_ENABLED);
-	RPMDriver.SetBrightness(BRIGHTNESS);
-	RPMDriver.SetRangeRPM(600, 15000);
-	RPMDriver.ClearSections();
-	RPMDriver.SetSection(0, MEDIUM_RPM /2, LOW_COLOUR);
-	RPMDriver.SetSection(MEDIUM_RPM / 2, MEDIUM_RPM, cHSV( 300, 254, 254));
-	RPMDriver.SetSection(MEDIUM_RPM, HIGH_RPM, MEDIUM_COLOUR);
-	RPMDriver.SetSection(HIGH_RPM, MAX_RPM, HIGH_COLOUR);//, { 120,255,1 }
-	RPMDriver.BootAnimation(LOW_COLOUR);
-	SWSerial.println(F("RPM setup complete"));
+	Serial.begin(SERIAL_BAUD_RATE);
+	inputString.reserve(200);// reserve bytes for the inputString:
+	delay(500);
 
+	Serial.println();
+	Serial.println();
+	Serial.println(F("RPM setup..."));
+	SetupRPMDriver();
+	Serial.println(F(" complete"));
 
-	Demo();
+	SetupDemo();
 }
 
+cHSV GetAlertBrightness()
+{
+	return { HIGH_COLOUR.h, HIGH_COLOUR.s, max(GlobalBrightness, ALERT_MIN_BRIGHTNESS) };
+}
 
-void loop() {
+bool SetupRPMDriver()
+{
+
+	//RPMDriver.AddLogger(&Serial);
+	RPMDriver.Begin();
+	RPMDriver.SetDesignModel(SUB_PIXEL_ENABLED);// | SUB_PIXEL_HIGH_RANGE_ENABLED | BACKGROUND_ENABLED);
+	RPMDriver.SetBrightness(GlobalBrightness);
+	RPMDriver.SetRangeRPM(600, 15000);
+	RPMDriver.ClearSections();
+
+	RPMDriver.SetAlertBlink(GetAlertBrightness(), ALERT_PULSE_MILLIS, ALERT_PULSE_DUTY_CYCLE);
+
+	//RPMDriver.SetExtendedOverflowRange(constrain(GlobalBrightness + 50, 0, 255));
+
+	RPMDriver.SetSection(0, MEDIUM_RPM / 2, LOW_COLOUR, BACKGROUND_COLOUR);
+	RPMDriver.SetSection(MEDIUM_RPM / 2, MEDIUM_RPM, cHSV(300, 254, 254), BACKGROUND_COLOUR);
+	RPMDriver.SetSection(MEDIUM_RPM, HIGH_RPM, MEDIUM_COLOUR, BACKGROUND_COLOUR);
+	RPMDriver.SetSection(HIGH_RPM, MAX_RPM, HIGH_COLOUR, BACKGROUND_COLOUR);//, { 120,255,1 }
+	RPMDriver.BootAnimation(LOW_COLOUR);
+
+}
+
+void loop()
+{
+	Now = millis();
+
+	if (Now - LastBrightnessUpdate > BRIGHTNESS_UPDATE_INTERVAL - 1)
+	{
+
+		LastBrightnessUpdate += BRIGHTNESS_UPDATE_INTERVAL;
+
+		UpdateBrightness();
+		/*Serial.print("GlobalBrightness: ");
+		Serial.println(GlobalBrightness);*/
+	}
+
+	if (Now - LastLEDUpdate > DEMO_LED_UPDATE_INTERVAL - 1)
+	{
+		LastLEDUpdate += DEMO_LED_UPDATE_INTERVAL;
+	}
+
+	if (Now - LastRPMLogUpdate > DEMO_RPM_LOG_UPDATE_INTERVAL - 1)
+	{
+		LastRPMLogUpdate += DEMO_RPM_LOG_UPDATE_INTERVAL;
+		Serial.print("RPM: ");
+		Serial.println(DemoRPM);
+	}
+
+	if (Now - LastRPMUpdate > DEMO_RPM_UPDATE_INTERVAL - 1)
+	{
+		LastRPMUpdate += DEMO_RPM_UPDATE_INTERVAL;
+
+		if (AnimationStep < ANIMATION_STEPS / 2)
+		{
+			DemoRPM = AnimationStep * 2 * ((uint32_t)DEMO_RPM_RANGE / (uint32_t)ANIMATION_STEPS);
+		}
+		else
+		{
+			DemoRPM = (ANIMATION_STEPS - AnimationStep) * 2 * ((uint32_t)DEMO_RPM_RANGE / ANIMATION_STEPS);
+		}
+
+		//RPMStart = micros();
+		RPMDriver.UpdateRPM(DemoRPM, Now, true);
+		//Serial.println(RPMDriver.Debug());
+		//RPMEnd = micros();
+		//Serial.print("Update RPM took: ");
+		//Serial.print((RPMEnd - RPMStart));
+		//Serial.println(" us");
+	}
+
+	Demo(Now);
+
+	if (Now - LastSerialUpdate > SERIAL_POLL_INTERVAL - 1)
+	{
+		if (stringComplete)
+		{
+			UpdateSerial();
+		}
+		LastSerialUpdate += SERIAL_POLL_INTERVAL;
+
+
+		//Serial.print("GlobalBrightness: ");
+		//Serial.println(GlobalBrightness);
+	}
 }
