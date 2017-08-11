@@ -12,6 +12,7 @@
 #include <NeoSWSerial.h>
 
 #include "LedDefinitions.h"
+#include "PinDefinitions.h"
 #include "LedSection.h"
 
 #define MAX_LED_COUNT 254
