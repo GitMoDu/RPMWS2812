@@ -254,7 +254,6 @@ void RPMWS2812::SetDesignModel(byte designModel)
 	UpdateSections(0);
 }
 
-uint8_t Progress = 0;
 
 void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 {
@@ -270,23 +269,45 @@ void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 		{
 			RPM_BlinkTimeStamp = timeStamp;
 		}
-
-		Progress = constrain(((timeStamp - RPM_BlinkTimeStamp) * 255) / AlertBlinkDuration, 0, 255);
-
-		if (Progress < AlertBlinkDutyCycle)
+		else
 		{
-			BlinkHSV = ColourAlertBlink;
-			BlinkHSV.v = constrain((Progress * 4 * 255) / AlertBlinkDutyCycle, 0, 255);
-			SetAllHSV(BlinkHSV);
-		}
-		else if (Progress >= AlertBlinkDutyCycle)
-		{
-			SetAllHSV(ColourClear);
-		}
+			if (timeStamp - RPM_BlinkTimeStamp > 0)
+			{
+				BlinkProgress = constrain(((timeStamp - RPM_BlinkTimeStamp) * 255) / AlertBlinkDuration, 0, 255);
+			}
+			else
+			{
+				BlinkProgress = 0;
+			}
 
-		if (Progress > 254)
-		{
-			RPM_BlinkTimeStamp = 0;
+			if (BlinkProgress < AlertBlinkDutyCycle)
+			{
+				BlinkHSV = ColourAlertBlink;
+				//uint8_t HighProgress = constrain((((uint16_t)BlinkProgress * 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255);
+				//int BrightnessAdjustedAlertScale = constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)GlobalBrightness) / 255), 0, 255);
+				//int ScaleProgress = (HighProgress  * BrightnessAdjustedAlertScale) / 255
+				//uint8_t ScaleProgress = constrain((((uint16_t)constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)) / 255), 0, 255)
+				//	* (uint16_t)constrain((((uint16_t)max(BlinkProgress, 10) * 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255)) / 255), 0, 255);
+
+				//Serial.print("ScaleProgress: ");
+				//Serial.println(ScaleProgress);
+
+				BlinkHSV.v = constrain((((uint16_t)constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)) / 255), 0, 255)
+					* (uint16_t)constrain((((uint16_t)max(BlinkProgress, 10) * 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255)) / 255), 0, 255);
+				SetAllHSV(BlinkHSV);
+			}
+			else if (BlinkProgress < constrain(AlertBlinkDutyCycle + 30 ,0,254))
+			{
+
+			}else
+			{
+				SetAllHSV(ColourClear);
+			}
+
+			if (BlinkProgress == 255)
+			{
+				RPM_BlinkTimeStamp = 0;
+			}
 		}
 	}
 	else if (RPM_Latest < RPM_Alive)
@@ -296,9 +317,9 @@ void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 			RPM_BlinkTimeStamp = timeStamp;
 		}
 
-		Progress = constrain(((timeStamp - RPM_BlinkTimeStamp) * 255) / AlertBlinkDuration, 0, 255);
+		BlinkProgress = constrain(((timeStamp - RPM_BlinkTimeStamp) * 255) / DeadBlinkDuration, 0, 255);
 
-		if (Progress > 254)
+		if (BlinkProgress > 254)
 		{
 			RPM_BlinkTimeStamp = 0;
 		}

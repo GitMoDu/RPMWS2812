@@ -47,14 +47,17 @@ private:
 #define ARC_ALIVE_RPM_DEFAULT 500
 #define ARC_ALERT_RPM_DEFAULT 15000
 
+#define ARC_ALERT_SCALE 1
+#define ARC_ALERT_MIN_SCALE 70
+
 	WS2812 Leds = WS2812(LED_COUNT);
 
 	uint16_t DeadBlinkDuration = ARC_DEAD_BLINK_DURATION_DEFAULT;
 	uint16_t AlertBlinkDuration = ARC_ALERT_BLINK_DURATION_DEFAULT;
 	uint16_t WakeupFadeDuration = ARC_WAKEUP_FADE_DURATION_DEFAULT;
 
-	uint16_t AlertBlinkDutyCycle = ARC_ALERT_BLINK_DUTY_CYCLE_DEFAULT;
-	uint16_t DeadBlinkDutyCycle = ARC_WAKEUP_FADE_DURATION_DEFAULT;
+	uint8_t AlertBlinkDutyCycle = ARC_ALERT_BLINK_DUTY_CYCLE_DEFAULT;
+	uint8_t DeadBlinkDutyCycle = ARC_WAKEUP_FADE_DURATION_DEFAULT;
 
 	uint8_t GlobalBrightness = ARC_BRIGHTNESS_DEFAULT;
 
@@ -83,6 +86,7 @@ private:
 
 	bool RPM_BlinkAlive, RPM_BlinkAlert = false;
 	uint32_t RPM_BlinkTimeStamp = 0;
+	uint8_t BlinkProgress = 0;
 
 	LedSection Sections[LED_COUNT];//Up to 1 section per Led
 	uint8_t SectionCount;
