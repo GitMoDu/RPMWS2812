@@ -227,7 +227,7 @@ void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bo
 
 	UpdateSections(timeStamp);
 
-	if (autoRefresh && Changed)
+	if (autoRefresh)
 	{
 		Show();
 	}
