@@ -82,7 +82,6 @@ private:
 	uint8_t ExtendedOverflowRange = ARC_EXTENDED_OVERFLOW_RANGE_DEFAULT;
 
 	cRGB RGBValue;
-	cHSV BlinkHSV;
 
 	bool RPM_BlinkAlive, RPM_BlinkAlert = false;
 	uint32_t RPM_BlinkTimeStamp = 0;

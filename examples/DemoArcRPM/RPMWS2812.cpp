@@ -282,24 +282,10 @@ void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 
 			if (BlinkProgress < AlertBlinkDutyCycle)
 			{
-				BlinkHSV = ColourAlertBlink;
-				//uint8_t HighProgress = constrain((((uint16_t)BlinkProgress * 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255);
-				//int BrightnessAdjustedAlertScale = constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)GlobalBrightness) / 255), 0, 255);
-				//int ScaleProgress = (HighProgress  * BrightnessAdjustedAlertScale) / 255
-				//uint8_t ScaleProgress = constrain((((uint16_t)constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)) / 255), 0, 255)
-				//	* (uint16_t)constrain((((uint16_t)max(BlinkProgress, 10) * 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255)) / 255), 0, 255);
-
-				//Serial.print("ScaleProgress: ");
-				//Serial.println(ScaleProgress);
-
-				BlinkHSV.v = constrain((((uint16_t)constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)) / 255), 0, 255)
-					* (uint16_t)constrain((((uint16_t)max(BlinkProgress, 10) * 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255)) / 255), 0, 255);
-				SetAllHSV(BlinkHSV);
+				SetAllHSV({ ColourAlertBlink.h , ColourAlertBlink.s, constrain((((uint16_t)constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)) / 255), 0, 255)
+					* (uint16_t)constrain((((uint16_t)max(BlinkProgress, 10) * 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255)) / 255), 0, 255) });
 			}
-			else if (BlinkProgress < constrain(AlertBlinkDutyCycle + 30 ,0,254))
-			{
-
-			}else
+			else
 			{
 				SetAllHSV(ColourClear);
 			}
