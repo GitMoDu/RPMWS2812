@@ -119,10 +119,14 @@ public:
 	void UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bool autoRefresh = true);
 	void SetRangeRPM(const uint16_t aliveRPM, const uint16_t maxRPM);
 	void SetDesignModel(byte designModel);
-	void SetDeadBlink(uint16_t deadBlinkDuration, cHSV blinkColour, uint16_t wakeupFadeDuration = 0);
+
 	void SetAlertBlink(cHSV blinkColour, uint16_t alertBlinkDuration, uint8_t onDutyCyle);
 	void SetAlertBlink(uint16_t alertBlinkDuration, uint8_t onDutyCyle);
 	void SetAlertBlink(cHSV blinkColour);
+	void SetDeadBlink(cHSV blinkColour, uint16_t deadBlinkDuration);
+	void SetDeadBlink(uint16_t deadBlinkDuration);
+	void SetDeadBlink(cHSV blinkColour);
+
 	void SetExtendedOverflowRange(uint8_t range);
 
 	String Debug();

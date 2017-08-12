@@ -124,48 +124,6 @@ void RPMWS2812::Set(const cRGB colour, const  uint8_t startIndex, const uint8_t 
 	}
 }
 
-void RPMWS2812::SetRangeRPM(const uint16_t aliveRPM, const uint16_t maxRPM)
-{
-	RPM_Alive = aliveRPM;
-	RPM_Alert = maxRPM;
-	UpdateRPMConstants();
-}
-
-void RPMWS2812::SetDeadBlink(uint16_t deadBlinkDuration, cHSV blinkColour, uint16_t wakeupFadeDuration = 0)
-{
-	ColourDeadBlink = blinkColour;
-	DeadBlinkDuration = deadBlinkDuration;
-	WakeupFadeDuration = wakeupFadeDuration;
-}
-
-void RPMWS2812::SetAlertBlink(uint16_t alertBlinkDuration, uint8_t onDutyCyle)
-{
-	AlertBlinkDuration = alertBlinkDuration;
-	AlertBlinkDutyCycle = onDutyCyle;
-}
-
-void RPMWS2812::SetAlertBlink(cHSV blinkColour, uint16_t alertBlinkDuration, uint8_t onDutyCyle)
-{
-	ColourAlertBlink = blinkColour;
-	AlertBlinkDuration = alertBlinkDuration;
-	AlertBlinkDutyCycle = onDutyCyle;
-}
-
-void RPMWS2812::SetAlertBlink(cHSV blinkColour)
-{
-	ColourAlertBlink = blinkColour;
-}
-
-void RPMWS2812::UpdateConstants()
-{
-	UpdateRPMConstants();
-}
-
-void RPMWS2812::SetExtendedOverflowRange(uint8_t range)
-{
-	ExtendedOverflowRange = range;
-}
-
 void RPMWS2812::UpdateRPMConstants()
 {
 	RPM_Per_Led = RPM_Alert / LED_COUNT;
@@ -376,6 +334,58 @@ void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 			}
 		}
 	}
+}
+
+void RPMWS2812::SetRangeRPM(const uint16_t aliveRPM, const uint16_t maxRPM)
+{
+	RPM_Alive = aliveRPM;
+	RPM_Alert = maxRPM;
+	UpdateRPMConstants();
+}
+
+
+void RPMWS2812::SetDeadBlink(uint16_t deadBlinkDuration)
+{
+	DeadBlinkDuration = deadBlinkDuration;
+}
+
+void RPMWS2812::SetDeadBlink(cHSV blinkColour, uint16_t deadBlinkDuration)
+{
+	ColourDeadBlink = blinkColour;
+	DeadBlinkDuration = deadBlinkDuration;
+}
+
+void RPMWS2812::SetDeadBlink(cHSV blinkColour)
+{
+	ColourAlertBlink = blinkColour;
+}
+
+void RPMWS2812::SetAlertBlink(uint16_t alertBlinkDuration, uint8_t onDutyCyle)
+{
+	AlertBlinkDuration = alertBlinkDuration;
+	AlertBlinkDutyCycle = onDutyCyle;
+}
+
+void RPMWS2812::SetAlertBlink(cHSV blinkColour, uint16_t alertBlinkDuration, uint8_t onDutyCyle)
+{
+	ColourAlertBlink = blinkColour;
+	AlertBlinkDuration = alertBlinkDuration;
+	AlertBlinkDutyCycle = onDutyCyle;
+}
+
+void RPMWS2812::SetAlertBlink(cHSV blinkColour)
+{
+	ColourAlertBlink = blinkColour;
+}
+
+void RPMWS2812::UpdateConstants()
+{
+	UpdateRPMConstants();
+}
+
+void RPMWS2812::SetExtendedOverflowRange(uint8_t range)
+{
+	ExtendedOverflowRange = range;
 }
 
 String RPMWS2812::Debug()
