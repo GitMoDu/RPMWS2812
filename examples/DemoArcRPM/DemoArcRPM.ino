@@ -202,8 +202,13 @@ void loop()
 		RPMStart = micros();
 		RPMDriver.UpdateRPM(DemoRPM, Now);
 		RPMEnd = micros();
-		//Serial.println(RPMDriver.Debug());
+		
 		Serial.print("Update RPM took: ");
+		Serial.print((RPMEnd - RPMStart));
+		Serial.println(" us");
+
+		//Serial.println(RPMDriver.Debug());
+
 	}
 
 	if (Now - LastRPMUpdate > DEMO_RPM_UPDATE_INTERVAL - 1)
