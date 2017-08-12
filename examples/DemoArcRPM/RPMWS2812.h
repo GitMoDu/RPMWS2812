@@ -102,15 +102,9 @@ private:
 	cRGB Scale(const cRGB colourRGB, const byte scale);
 	void DirectAnimate(const cHSV colourStart, const cHSV colourEnd, const uint16_t durationMillis);
 	cHSV CrossfadedHSB(cHSV colour1, cHSV colour2, byte progress);
-	
 
-	NeoSWSerial* Logger = nullptr;
-	bool Log = false;
-
-	
 public:
 
-	void AddLogger(NeoSWSerial* logger);
 	bool Begin();
 	void BootAnimation(cHSV colourBoot = cHSV(ARC_COLOUR_BOOT_START));
 	void SetAllHSV(cHSV colour);

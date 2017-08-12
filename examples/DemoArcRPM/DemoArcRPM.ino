@@ -9,8 +9,6 @@
 #include "FastColour.h"
 #include "LedSection.h"
 #include "RPMWS2812.h"
-//#include <NeoSerial.h>
-//#include <SoftwareSerial.h>
 
 #define SERIAL_BAUD_RATE 115200
 #define STARTING_BRIGHTNESS 150 //Out of 255
@@ -216,26 +214,13 @@ void loop()
 	if (Now - LastRPMUpdate > DEMO_RPM_UPDATE_INTERVAL - 1)
 	{
 		LastRPMUpdate += DEMO_RPM_UPDATE_INTERVAL;
-
-
-
-		//RPMStart = micros();
 		RPMDriver.UpdateRPM(DemoRPM, Now);
-		//Serial.println(RPMDriver.Debug());
-		//RPMEnd = micros();
-		//Serial.print("Update RPM took: ");
-		//Serial.print((RPMEnd - RPMStart));
-		//Serial.println(" us");
 	}
 
 	if (Now - LastBrightnessUpdate > BRIGHTNESS_UPDATE_INTERVAL - 1)
 	{
-
 		LastBrightnessUpdate += BRIGHTNESS_UPDATE_INTERVAL;
-
 		UpdateBrightness();
-		/*Serial.print("GlobalBrightness: ");
-		Serial.println(GlobalBrightness);*/
 	}
 
 	Demo(Now);
@@ -247,10 +232,6 @@ void loop()
 			UpdateSerial();
 		}
 		LastSerialUpdate += SERIAL_POLL_INTERVAL;
-
-
-		//Serial.print("GlobalBrightness: ");
-		//Serial.println(GlobalBrightness);
 	}
 }
 

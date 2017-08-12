@@ -17,12 +17,6 @@ bool RPMWS2812::Begin()
 	return true;
 }
 
-void RPMWS2812::AddLogger(NeoSWSerial* logger)
-{
-	Logger = logger;
-	Log = true;
-}
-
 void RPMWS2812::BootAnimation(cHSV colourBoot)
 {
 	uint16_t BootDelayStep = ARC_BOOT_DURATION / 4;
