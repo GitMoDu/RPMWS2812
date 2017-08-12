@@ -2,9 +2,6 @@
 /// 
 ///  Created for personal use, use it at your own risk and benefit.
 /// 
-#define X9_CS_PIN 3
-#define X9_UD_PIN 4
-#define X9_INC_PIN 5
 
 #include "PinDefinitions.h"
 #include "LedDefinitions.h"
