@@ -66,11 +66,6 @@ uint32_t AnimationStart;
 uint32_t LastRPMUpdate, LastLEDUpdate, LastAnimationUpdate, LastRPMLogUpdate,
 LastPowerUpdate, LastPowerLogUpdate, LastBrightnessUpdate, LastSerialUpdate;
 
-uint64_t LastPowerSum = 0;
-uint32_t LastAveragePower = 0;
-uint16_t PowerSumCounter = 0;
-
-
 void SetupDemo()
 {
 	AnimationStep = 0;
@@ -88,6 +83,7 @@ void SetupDemo()
 	LastBrightnessUpdate = StartTime;
 	LastSerialUpdate = StartTime;
 }
+
 void Demo(uint32_t now)
 {
 	if (now - LastAnimationUpdate > ANIMATION_UPDATE_INTERVAL - 1)
@@ -161,11 +157,6 @@ void setup()
 	Serial.println(F(" complete"));
 
 	SetupDemo();
-}
-
-cHSV GetAlertBrightness()
-{
-	return { HIGH_COLOUR.h, HIGH_COLOUR.s, max(GlobalBrightness, ALERT_MIN_BRIGHTNESS) };
 }
 
 bool SetupRPMDriver()
