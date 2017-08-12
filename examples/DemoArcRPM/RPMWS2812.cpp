@@ -283,7 +283,7 @@ void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 			if (BlinkProgress < AlertBlinkDutyCycle)
 			{
 				SetAllHSV({ ColourAlertBlink.h , ColourAlertBlink.s, constrain((((uint16_t)constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)) / 255), 0, 255)
-					* (uint16_t)constrain((((uint16_t)max(BlinkProgress, 10) * 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255)) / 255), 0, 255) });
+					* (uint16_t)constrain((((uint16_t)BlinkProgress* 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255)) / 255), 0, 255) });
 			}
 			else
 			{
