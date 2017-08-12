@@ -92,6 +92,15 @@ void Demo(uint32_t now)
 
 		AnimationStep = ((ANIMATION_STEPS*(now - AnimationStart)) / ANIMATION_DURATION);
 
+		if (AnimationStep < ANIMATION_STEPS / 2)
+		{
+			DemoRPM = AnimationStep * 2 * ((uint32_t)DEMO_RPM_RANGE / (uint32_t)ANIMATION_STEPS);
+		}
+		else
+		{
+			DemoRPM = (ANIMATION_STEPS - AnimationStep) * 2 * ((uint32_t)DEMO_RPM_RANGE / ANIMATION_STEPS);
+		}
+
 		if (now - AnimationStart > ANIMATION_DURATION - 1)
 		{
 			AnimationStep = 0;
@@ -152,19 +161,26 @@ void setup()
 
 	Serial.println();
 	Serial.println();
+
 	Serial.println(F("RPM setup..."));
-	SetupRPMDriver();
+	if (!SetupRPMDriver())
+	{
+		Serial.println(F(" failed"));
+		Halt();
+	}
 	Serial.println(F(" complete"));
 
 	SetupDemo();
 }
 
+
+
 bool SetupRPMDriver()
 {
-
+	bool Success = false;
 	//RPMDriver.AddLogger(&Serial);
-	RPMDriver.Begin();
-	RPMDriver.SetDesignModel(SUB_PIXEL_ENABLED);// | SUB_PIXEL_HIGH_RANGE_ENABLED | BACKGROUND_ENABLED);
+	Success = RPMDriver.Begin();
+	RPMDriver.SetDesignModel(SUB_PIXEL_ENABLED | BACKGROUND_ENABLED);// | SUB_PIXEL_HIGH_RANGE_ENABLED | BACKGROUND_ENABLED);
 	RPMDriver.SetBrightness(GlobalBrightness);
 	RPMDriver.SetRangeRPM(600, 15000);
 	RPMDriver.ClearSections();
@@ -185,16 +201,6 @@ void loop()
 {
 	Now = millis();
 
-	if (Now - LastBrightnessUpdate > BRIGHTNESS_UPDATE_INTERVAL - 1)
-	{
-
-		LastBrightnessUpdate += BRIGHTNESS_UPDATE_INTERVAL;
-
-		UpdateBrightness();
-		/*Serial.print("GlobalBrightness: ");
-		Serial.println(GlobalBrightness);*/
-	}
-
 	if (Now - LastLEDUpdate > DEMO_LED_UPDATE_INTERVAL - 1)
 	{
 		LastLEDUpdate += DEMO_LED_UPDATE_INTERVAL;
@@ -211,22 +217,25 @@ void loop()
 	{
 		LastRPMUpdate += DEMO_RPM_UPDATE_INTERVAL;
 
-		if (AnimationStep < ANIMATION_STEPS / 2)
-		{
-			DemoRPM = AnimationStep * 2 * ((uint32_t)DEMO_RPM_RANGE / (uint32_t)ANIMATION_STEPS);
-		}
-		else
-		{
-			DemoRPM = (ANIMATION_STEPS - AnimationStep) * 2 * ((uint32_t)DEMO_RPM_RANGE / ANIMATION_STEPS);
-		}
+
 
 		//RPMStart = micros();
-		RPMDriver.UpdateRPM(DemoRPM, Now, true);
+		RPMDriver.UpdateRPM(DemoRPM, Now);
 		//Serial.println(RPMDriver.Debug());
 		//RPMEnd = micros();
 		//Serial.print("Update RPM took: ");
 		//Serial.print((RPMEnd - RPMStart));
 		//Serial.println(" us");
+	}
+
+	if (Now - LastBrightnessUpdate > BRIGHTNESS_UPDATE_INTERVAL - 1)
+	{
+
+		LastBrightnessUpdate += BRIGHTNESS_UPDATE_INTERVAL;
+
+		UpdateBrightness();
+		/*Serial.print("GlobalBrightness: ");
+		Serial.println(GlobalBrightness);*/
 	}
 
 	Demo(Now);
@@ -243,4 +252,9 @@ void loop()
 		//Serial.print("GlobalBrightness: ");
 		//Serial.println(GlobalBrightness);
 	}
+}
+
+void Halt()
+{
+	while (true);;
 }
