@@ -10,7 +10,6 @@
 
 #include <Arduino.h>
 #include <WS2812.h>
-#include <NeoSWSerial.h>
 
 #include "LedDefinitions.h"
 #include "PinDefinitions.h"
