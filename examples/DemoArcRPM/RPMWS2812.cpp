@@ -268,6 +268,7 @@ void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 		if (RPM_BlinkTimeStamp == 0)
 		{
 			RPM_BlinkTimeStamp = timeStamp;
+			SetAllHSV(ColourClear);
 		}
 		else
 		{
