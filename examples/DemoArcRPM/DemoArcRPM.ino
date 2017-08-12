@@ -55,6 +55,7 @@ boolean stringComplete = false;  // whether the string is complete
 RPMWS2812 RPMDriver;
 
 uint8_t GlobalBrightness = STARTING_BRIGHTNESS;
+uint8_t LastGlobalBrightness = 0;
 
 //Mostly demo stuff
 uint16_t DemoRPM = 0;
@@ -64,6 +65,7 @@ uint32_t Now;
 uint32_t AnimationStart;
 uint32_t LastRPMUpdate, LastLEDUpdate, LastAnimationUpdate, LastRPMLogUpdate,
 LastPowerUpdate, LastPowerLogUpdate, LastBrightnessUpdate, LastSerialUpdate;
+
 uint64_t LastPowerSum = 0;
 uint32_t LastAveragePower = 0;
 uint16_t PowerSumCounter = 0;
@@ -128,16 +130,21 @@ void UpdateSerial()
 
 	inputString = "";
 	stringComplete = false;
-	
+
 }
 
 void UpdateBrightness()
 {
-	RPMDriver.SetBrightness(GlobalBrightness);
-	//RPMDriver.SetExtendedOverflowRange(constrain(GlobalBrightness + 5, 0, 255));
-	RPMDriver.SetAlertBlink(GetAlertBrightness());
-	//Serial.print("GlobalBrightness: ");
-	//Serial.println(GlobalBrightness);
+	if (GlobalBrightness != LastGlobalBrightness)
+	{
+		RPMDriver.SetBrightness(GlobalBrightness);
+		//RPMDriver.SetExtendedOverflowRange(constrain(GlobalBrightness + 5, 0, 255));
+		//Serial.print("GlobalBrightness: ");
+		//Serial.println(GlobalBrightness);
+
+		LastGlobalBrightness = GlobalBrightness;
+	}
+
 }
 
 void setup()
@@ -171,7 +178,7 @@ bool SetupRPMDriver()
 	RPMDriver.SetRangeRPM(600, 15000);
 	RPMDriver.ClearSections();
 
-	RPMDriver.SetAlertBlink(GetAlertBrightness(), ALERT_PULSE_MILLIS, ALERT_PULSE_DUTY_CYCLE);
+	RPMDriver.SetAlertBlink(HIGH_COLOUR, ALERT_PULSE_MILLIS, ALERT_PULSE_DUTY_CYCLE);
 
 	//RPMDriver.SetExtendedOverflowRange(constrain(GlobalBrightness + 50, 0, 255));
 
