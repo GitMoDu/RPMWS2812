@@ -180,7 +180,7 @@ bool SetupRPMDriver()
 	RPMDriver.SetSection(MEDIUM_RPM / 2, MEDIUM_RPM, cHSV(300, 255, 200), BACKGROUND_COLOUR);
 	RPMDriver.SetSection(MEDIUM_RPM, HIGH_RPM, MEDIUM_COLOUR, cHSV(100, 255, 22));
 	RPMDriver.SetSection(HIGH_RPM, MAX_RPM, HIGH_COLOUR, cHSV(120, 255, 10));//, { 120,255,1 }
-	RPMDriver.BootAnimation(LOW_COLOUR);
+	RPMDriver.BootAnimation(LOW_COLOUR, 200);
 
 	return Success;
 }

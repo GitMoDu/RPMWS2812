@@ -106,6 +106,7 @@ private:
 public:
 
 	bool Begin();
+	void BootAnimation(cHSV colourBoot, uint8_t animationBrightness);
 	void BootAnimation(cHSV colourBoot = cHSV(ARC_COLOUR_BOOT_START));
 	void SetAllHSV(cHSV colour);
 	void SetAll(cRGB colourRGB);

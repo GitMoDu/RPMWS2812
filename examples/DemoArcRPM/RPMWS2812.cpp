@@ -17,15 +17,15 @@ bool RPMWS2812::Begin()
 	return true;
 }
 
-void RPMWS2812::BootAnimation(cHSV colourBoot)
+void RPMWS2812::BootAnimation(cHSV colourBoot, uint8_t animationBrightness)
 {
 	uint16_t BootDelayStep = ARC_BOOT_DURATION / 4;
 
 	cHSV ColourBootStart, ColourBootMiddle, ColourBootPeak;
 
 	ColourBootStart = cHSV(colourBoot.h, colourBoot.s, 0);
-	ColourBootMiddle = cHSV(colourBoot.h, colourBoot.s, ((GlobalBrightness / 4)*colourBoot.v) / 255);
-	ColourBootPeak = cHSV(colourBoot.h, colourBoot.s, ((GlobalBrightness)*colourBoot.v) / 255);
+	ColourBootMiddle = cHSV(colourBoot.h, colourBoot.s, ((animationBrightness / 4)*colourBoot.v) / 255);
+	ColourBootPeak = cHSV(colourBoot.h, colourBoot.s, ((animationBrightness)*colourBoot.v) / 255);
 
 	Clear();
 	SetAllHSV(ColourBootStart);
@@ -35,6 +35,12 @@ void RPMWS2812::BootAnimation(cHSV colourBoot)
 	DirectAnimate(ColourBootPeak, ColourBootMiddle, BootDelayStep);
 	DirectAnimate(ColourBootMiddle, ColourBootStart, BootDelayStep);
 	delay((BootDelayStep * 3) / 4);
+}
+
+
+void RPMWS2812::BootAnimation(cHSV colourBoot)
+{
+	BootAnimation(colourBoot, GlobalBrightness);
 }
 
 void RPMWS2812::Show()
