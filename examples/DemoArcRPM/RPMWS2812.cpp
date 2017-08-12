@@ -254,13 +254,39 @@ void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 		if (RPM_BlinkTimeStamp == 0)
 		{
 			RPM_BlinkTimeStamp = timeStamp;
+			SetAllHSV(ColourClear);
 		}
-
-		BlinkProgress = constrain(((timeStamp - RPM_BlinkTimeStamp) * 255) / DeadBlinkDuration, 0, 255);
-
-		if (BlinkProgress > 254)
+		else
 		{
-			RPM_BlinkTimeStamp = 0;
+			if (timeStamp - RPM_BlinkTimeStamp > 0)
+			{
+				BlinkProgress = constrain(((timeStamp - RPM_BlinkTimeStamp) * 255) / DeadBlinkDuration, 0, 255);
+			}
+			else
+			{
+				BlinkProgress = 0;
+			}
+
+			uint8_t DeadProgress;
+			if (BlinkProgress < 127)
+			{
+				DeadProgress = constrain((((uint16_t)BlinkProgress * 255) / (uint16_t)127), 0, 255);
+			}
+			else
+			{
+				DeadProgress = constrain((((255 - (uint16_t)BlinkProgress) * 255) / (uint16_t)127), 0, 255);
+			}
+
+			SetAllHSV({ ColourDeadBlink.h , ColourDeadBlink.s, constrain((
+				((uint16_t)constrain((((uint16_t)ColourDeadBlink.v 
+					* (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)
+				) / 255), 0, 255)  
+					* (uint16_t)DeadProgress)) /255, 0 ,255)});
+
+			if (BlinkProgress == 255)
+			{
+				RPM_BlinkTimeStamp = 0;
+			}
 		}
 	}
 	else
