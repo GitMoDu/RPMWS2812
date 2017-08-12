@@ -45,13 +45,8 @@
 #define BACKGROUND_COLOUR cHSV(240, 0, 0)
 #define LED_MIN_BRIGHTNESS_VALUE 20
 
-
-
-//NeoSerial Serial(0, 1);
-//SoftwareSerial Serial(4, 3);
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
-
 
 RPMWS2812 RPMDriver;
 
@@ -113,7 +108,6 @@ void Demo(uint32_t now)
 	}
 }
 
-
 void serialEvent() {
 	while (Serial.available()) {
 		// get the new byte:
@@ -136,7 +130,6 @@ void UpdateSerial()
 
 	inputString = "";
 	stringComplete = false;
-
 }
 
 void UpdateBrightness()
@@ -144,13 +137,8 @@ void UpdateBrightness()
 	if (GlobalBrightness != LastGlobalBrightness)
 	{
 		RPMDriver.SetBrightness(GlobalBrightness);
-		//RPMDriver.SetExtendedOverflowRange(constrain(GlobalBrightness + 5, 0, 255));
-		//Serial.print("GlobalBrightness: ");
-		//Serial.println(GlobalBrightness);
-
 		LastGlobalBrightness = GlobalBrightness;
 	}
-
 }
 
 void setup()
@@ -173,8 +161,6 @@ void setup()
 
 	SetupDemo();
 }
-
-
 
 bool SetupRPMDriver()
 {

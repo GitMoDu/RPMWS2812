@@ -86,7 +86,8 @@ private:
 	uint32_t RPM_BlinkTimeStamp = 0;
 	uint8_t BlinkProgress = 0;
 
-	LedSection Sections[LED_COUNT];//Up to 1 section per Led
+	//Down to 1 LED per Section
+	LedSection Sections[LED_COUNT];
 	uint8_t SectionCount;
 
 	uint8_t SectionBackgroundBrightnessHelper;

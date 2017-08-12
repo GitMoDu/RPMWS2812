@@ -185,7 +185,6 @@ void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bo
 	}
 }
 
-
 void RPMWS2812::SetSection(const uint16_t beginRPM, const uint16_t endRPM,
 	const cHSV fillColour, const  cHSV backgroundColour, const  cHSV markerColour)
 {
@@ -205,7 +204,6 @@ void RPMWS2812::SetDesignModel(byte designModel)
 	DesignModel = designModel;
 	UpdateSections(0);
 }
-
 
 void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 {
@@ -362,7 +360,6 @@ void RPMWS2812::SetRangeRPM(const uint16_t aliveRPM, const uint16_t maxRPM)
 	RPM_Alert = maxRPM;
 	UpdateRPMConstants();
 }
-
 
 void RPMWS2812::SetDeadBlink(uint16_t deadBlinkDuration)
 {
