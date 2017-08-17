@@ -3,9 +3,6 @@
 #ifndef _FASTCOLOUR_h
 #define _FASTCOLOUR_h
 
-
-
-#include <Arduino.h>
 #include <WS2812.h>
 
 #define COLOUR_NONE {0,0,0}

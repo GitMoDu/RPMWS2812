@@ -1,4 +1,5 @@
-/// 
+///  RPM indicator based on WS2812 LEDs
+///
 ///  Created for personal use, use it at your own risk and benefit.
 ///  https://github.com/GitMoDu/RPMWS2812
 ///  Based on the excellent work by Kasper Kamperman(https://www.kasperkamperman.com)
@@ -7,14 +8,21 @@
 
 #include "RPMWS2812.h"
 
-bool RPMWS2812::Begin()
+bool RPMWS2812::Setup(uint8_t ledCount, uint8_t ledDataPin)
 {
-	Leds.setOutput(LED_DATA_PIN);
-	Leds.setColorOrderRGB();
-
-	Clear();
-
-	return true;
+	if (ledDataPin != INVALID_PIN && ledCount < MAX_LED_COUNT)
+	{
+		LedCount = ledCount;
+		LedDataPin = ledDataPin;
+		Leds.setOutput(LedDataPin);
+		Leds.setColorOrderRGB();
+		Clear();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 void RPMWS2812::BootAnimation(cHSV colourBoot, uint8_t animationBrightness)
@@ -106,14 +114,14 @@ void RPMWS2812::Clear()
 
 void RPMWS2812::SetAll(cRGB colour)
 {
-	Set(colour, 0, LED_COUNT);
+	Set(colour, 0, LedCount);
 }
 
 void RPMWS2812::SetAllHSV(cHSV colour)
 {
 	cRGB ColourRGB;
 	ColourRGB.SetHSV(colour.h, colour.s, colour.v);
-	Set(ColourRGB, 0, LED_COUNT);
+	Set(ColourRGB, 0, LedCount);
 }
 
 void RPMWS2812::Set(const cRGB colour, const  uint8_t startIndex, const uint8_t endIndex)
@@ -126,7 +134,7 @@ void RPMWS2812::Set(const cRGB colour, const  uint8_t startIndex, const uint8_t 
 
 void RPMWS2812::UpdateRPMConstants()
 {
-	RPM_Per_Led = RPM_Alert / LED_COUNT;
+	RPM_Per_Led = RPM_Alert / LedCount;
 	RPM_AliveInt = RPM_Alive / RPM_Per_Led;
 	RPM_AlertInt = RPM_Alert / RPM_Per_Led;
 
@@ -428,7 +436,7 @@ String RPMWS2812::Debug()
 		+ " RPM_Alert: "
 		+ String(RPM_Alert, DEC)
 		+ " LED_COUNT: "
-		+ String(LED_COUNT, DEC)
+		+ String(LedCount, DEC)
 		+ " Section count; "
 		+ String(SectionCount, DEC);
 

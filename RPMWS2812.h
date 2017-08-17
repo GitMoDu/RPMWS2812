@@ -1,4 +1,5 @@
-/// 
+///  RPM indicator based on WS2812 LEDs
+///
 ///  Created for personal use, use it at your own risk and benefit.
 ///  https://github.com/GitMoDu/RPMWS2812
 ///  Based on the excellent work by Kasper Kamperman(https://www.kasperkamperman.com)
@@ -11,16 +12,16 @@
 #include <Arduino.h>
 #include <WS2812.h>
 
-#include "LedDefinitions.h"
-#include "PinDefinitions.h"
 #include "LedSection.h"
 
-//#define ARC_MAX_LED_COUNT 255
+#define MAX_LED_COUNT 16
 
 #define SUB_PIXEL_ENABLED B00000001
 #define MARKERS_ENABLED B00000010
 #define BACKGROUND_ENABLED B00000100
 #define SUB_PIXEL_HIGH_RANGE_ENABLED B00001000
+
+#define INVALID_PIN 255
 
 class RPMWS2812
 {
@@ -49,7 +50,10 @@ private:
 #define ARC_ALERT_SCALE 1
 #define ARC_ALERT_MIN_SCALE 70
 
-	WS2812 Leds = WS2812(LED_COUNT);
+	WS2812 Leds = WS2812(MAX_LED_COUNT);
+
+	uint8_t LedCount = MAX_LED_COUNT;
+	uint8_t LedDataPin = 255;
 
 	uint16_t DeadBlinkDuration = ARC_DEAD_BLINK_DURATION_DEFAULT;
 	uint16_t AlertBlinkDuration = ARC_ALERT_BLINK_DURATION_DEFAULT;
@@ -86,7 +90,7 @@ private:
 	uint8_t BlinkProgress = 0;
 
 	//Down to 1 LED per Section
-	LedSection Sections[LED_COUNT];
+	LedSection Sections[MAX_LED_COUNT];
 	uint8_t SectionCount;
 
 	uint8_t SectionBackgroundBrightnessHelper;
@@ -104,7 +108,7 @@ private:
 
 public:
 
-	bool Begin();
+	bool Setup(uint8_t ledCount, uint8_t ledDataPin);
 	void BootAnimation(cHSV colourBoot, uint8_t animationBrightness);
 	void BootAnimation(cHSV colourBoot = cHSV(ARC_COLOUR_BOOT_START));
 	void SetAllHSV(cHSV colour);

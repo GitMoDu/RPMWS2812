@@ -1,17 +1,18 @@
-
-/// 
+///  RPM indicator example. Sample yellow/red indicators with blue theme.
+///
 ///  Created for personal use, use it at your own risk and benefit.
+///  https://github.com/GitMoDu/RPMWS2812
+///  Based on the excellent work by Kasper Kamperman(https://www.kasperkamperman.com)
+///  Depends on Light_WS2812 https://github.com/cpldcpu/light_ws2812
 /// 
 
-#include "PinDefinitions.h"
-#include "LedDefinitions.h"
+#include <RPMWS2812.h>
 
-#include "FastColour.h"
-#include "LedSection.h"
-#include "RPMWS2812.h"
+#define LED_DATA_PIN 2
+#define ARC_LED_COUNT 15
 
 #define SERIAL_BAUD_RATE 115200
-#define STARTING_BRIGHTNESS 100 //Out of 255
+#define STARTING_BRIGHTNESS 150 //Out of 255
 
 #define ANIMATION_STEPS 6000
 #define DEMO_RPM_RANGE 18000
@@ -165,22 +166,26 @@ void setup()
 bool SetupRPMDriver()
 {
 	bool Success = false;
-	//RPMDriver.AddLogger(&Serial);
-	Success = RPMDriver.Begin();
-	RPMDriver.SetDesignModel(SUB_PIXEL_ENABLED | BACKGROUND_ENABLED);// | SUB_PIXEL_HIGH_RANGE_ENABLED | BACKGROUND_ENABLED);
-	RPMDriver.SetBrightness(GlobalBrightness);
-	RPMDriver.SetRangeRPM(900, 15000);
-	RPMDriver.ClearSections();
 
-	RPMDriver.SetAlertBlink(HIGH_COLOUR, ALERT_PULSE_MILLIS, ALERT_PULSE_DUTY_CYCLE);
-	RPMDriver.SetDeadBlink(DEAD_COLOR, DEAD_PULSE_DURATION);
-	//RPMDriver.SetExtendedOverflowRange(constrain(GlobalBrightness + 50, 0, 255));
+	Success = RPMDriver.Setup(ARC_LED_COUNT, LED_DATA_PIN);
 
-	RPMDriver.SetSection(0, MEDIUM_RPM / 2, LOW_COLOUR, BACKGROUND_COLOUR);
-	RPMDriver.SetSection(MEDIUM_RPM / 2, MEDIUM_RPM, cHSV(300, 255, 200), BACKGROUND_COLOUR);
-	RPMDriver.SetSection(MEDIUM_RPM, HIGH_RPM, MEDIUM_COLOUR, cHSV(100, 255, 22));
-	RPMDriver.SetSection(HIGH_RPM, MAX_RPM, HIGH_COLOUR, cHSV(120, 255, 10));//, { 120,255,1 }
-	RPMDriver.BootAnimation(LOW_COLOUR, 200);
+	if (Success)
+	{
+		RPMDriver.SetDesignModel(SUB_PIXEL_ENABLED | BACKGROUND_ENABLED);// | SUB_PIXEL_HIGH_RANGE_ENABLED | BACKGROUND_ENABLED);
+		RPMDriver.SetBrightness(GlobalBrightness);
+		RPMDriver.SetRangeRPM(1000, 15000);
+		RPMDriver.ClearSections();
+
+		RPMDriver.SetAlertBlink(HIGH_COLOUR, ALERT_PULSE_MILLIS, ALERT_PULSE_DUTY_CYCLE);
+		RPMDriver.SetDeadBlink(DEAD_COLOR, DEAD_PULSE_DURATION);
+		//RPMDriver.SetExtendedOverflowRange(constrain(GlobalBrightness + 50, 0, 255));
+
+		RPMDriver.SetSection(0, MEDIUM_RPM / 2, LOW_COLOUR, BACKGROUND_COLOUR);
+		RPMDriver.SetSection(MEDIUM_RPM / 2, MEDIUM_RPM, cHSV(300, 255, 200), BACKGROUND_COLOUR);
+		RPMDriver.SetSection(MEDIUM_RPM, HIGH_RPM, MEDIUM_COLOUR, cHSV(100, 255, 22));
+		RPMDriver.SetSection(HIGH_RPM, MAX_RPM, HIGH_COLOUR, cHSV(120, 255, 10));//, { 120,255,1 }
+		RPMDriver.BootAnimation(LOW_COLOUR, 200);
+	}
 
 	return Success;
 }
@@ -200,15 +205,20 @@ void loop()
 		Serial.print("RPM: ");
 		Serial.println(DemoRPM);
 		RPMStart = micros();
-		RPMDriver.UpdateRPM(DemoRPM, Now);
+		RPMDriver.UpdateRPM(DemoRPM, Now, false);
 		RPMEnd = micros();
-		
 		Serial.print("Update RPM took: ");
 		Serial.print((RPMEnd - RPMStart));
 		Serial.println(" us");
 
-		//Serial.println(RPMDriver.Debug());
+		RPMStart = micros();
+		RPMDriver.Show();
+		RPMEnd = micros();
+		Serial.print("Update LEDs took: ");
+		Serial.print((RPMEnd - RPMStart));
+		Serial.println(" us");
 
+		//Serial.println(RPMDriver.Debug());
 	}
 
 	if (Now - LastRPMUpdate > DEMO_RPM_UPDATE_INTERVAL - 1)
