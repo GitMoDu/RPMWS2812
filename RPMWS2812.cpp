@@ -221,12 +221,6 @@ void RPMWS2812::SetDesignModel(byte designModel)
 
 void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 {
-	if (DesignModel & SUB_PIXEL_ENABLED)
-	{
-		RPM_FloorScaled = RPM_Int * RPM_Per_Led;
-		RPM_Overflow = RPM_Latest - RPM_FloorScaled;
-	}
-
 	if (RPM_Int >= RPM_AlertInt)
 	{
 		if (RPM_BlinkTimeStamp == 0)
@@ -337,6 +331,9 @@ void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 				{
 					if (DesignModel & SUB_PIXEL_ENABLED)
 					{
+						RPM_FloorScaled = RPM_Int * RPM_Per_Led;
+						RPM_Overflow = RPM_Latest - RPM_FloorScaled;
+
 						if (DesignModel & MARKERS_ENABLED && i == Sections[j].Begin)//Overflow on marker pixel, slightly different maths.
 						{
 							RPM_PixelOverflow = constrain((uint8_t)((RPM_Overflow * Sections[j].OverflowRangeMarker) / RPM_Per_Led), 0, 255);
