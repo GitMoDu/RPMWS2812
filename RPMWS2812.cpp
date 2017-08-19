@@ -10,7 +10,8 @@
 
 bool RPMWS2812::Setup(uint8_t ledCount, uint8_t ledDataPin)
 {
-	if (ledDataPin != INVALID_PIN && ledCount < MAX_LED_COUNT)
+
+	if (ledCount < MAX_LED_COUNT)
 	{
 		LedCount = ledCount;
 		LedDataPin = ledDataPin;
