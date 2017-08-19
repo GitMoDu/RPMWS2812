@@ -12,7 +12,7 @@
 #include <Arduino.h>
 #define USE_HSV
 #include <WS2812.h>
-
+//#include <Doge.h>
 #include "LedSection.h"
 
 #define MAX_LED_COUNT 16
@@ -39,9 +39,6 @@ private:
 
 #define ARC_EXTENDED_OVERFLOW_RANGE_DEFAULT 255
 
-#define ARC_ALERT_BLINK_DUTY_CYCLE_DEFAULT 127
-#define ARC_DEAD_BLINK_DUTY_CYCLE_DEFAULT 127
-
 #define ARC_COLOUR_BOOT_START 240,254,200
 #define ARC_BOOT_DURATION 2000
 
@@ -53,9 +50,6 @@ private:
 #define ARC_ALIVE_RPM_DEFAULT 500
 #define ARC_ALERT_RPM_DEFAULT 15000
 
-#define ARC_ALERT_SCALE 1
-#define ARC_ALERT_MIN_SCALE 70
-
 	WS2812 Leds = WS2812(MAX_LED_COUNT);
 
 	uint8_t LedCount = MAX_LED_COUNT;
@@ -64,8 +58,6 @@ private:
 	uint16_t DeadBlinkDuration = ARC_DEAD_BLINK_DURATION_DEFAULT;
 	uint16_t AlertBlinkDuration = ARC_ALERT_BLINK_DURATION_DEFAULT;
 	uint16_t WakeupFadeDuration = ARC_WAKEUP_FADE_DURATION_DEFAULT;
-
-	uint8_t AlertBlinkDutyCycle = ARC_ALERT_BLINK_DUTY_CYCLE_DEFAULT;
 
 	uint8_t GlobalBrightness = ARC_BRIGHTNESS_DEFAULT;
 
@@ -85,7 +77,6 @@ private:
 	uint8_t RPM_Int;
 
 	//Runtime helper variables
-	uint32_t RPM_FloorScaled, RPM_Overflow;
 	uint8_t RPM_PixelOverflow;
 	uint8_t ExtendedOverflowRange = ARC_EXTENDED_OVERFLOW_RANGE_DEFAULT;
 
@@ -93,19 +84,27 @@ private:
 
 	bool RPM_BlinkAlive, RPM_BlinkAlert = false;
 	uint32_t RPM_BlinkTimeStamp = 0;
-	uint8_t BlinkProgress = 0;
+	uint8_t ProgressHelper = 0;
+	uint8_t FlashingCurve(const uint8_t input, const uint8_t value);
+	uint8_t WarningCurve(const uint8_t input, const uint8_t value);
+
+	bool NeedsRefresh = true;
 
 	//Down to 1 LED per Section
 	LedSection Sections[MAX_LED_COUNT];
 	uint8_t SectionCount;
 
-	uint8_t SectionBackgroundBrightnessHelper;
-
 	byte DesignModel = SUB_PIXEL_ENABLED;
 
-	void UpdateConstants();
-	void UpdateRPMConstants();
+	void UpdateSectionsDynamic();
+	void UpdateSectionsConstant();
 	void UpdateSections(const uint32_t timeStamp);
+
+	void BlinkAlertUpdate(const uint32_t timeStamp);
+	void BlinkDeadUpdate(const uint32_t timeStamp);
+	void FillUpdate1(const uint32_t timeStamp);
+
+	uint8_t BrightnessAdjust(uint8_t value);
 
 	void Set(const cRGB colourRGB, const uint8_t startIndex, const uint8_t endIndex);
 	cRGB Scale(const cRGB colourRGB, const byte scale);
@@ -124,8 +123,8 @@ public:
 	void SetRangeRPM(const uint16_t aliveRPM, const uint16_t maxRPM);
 	void SetDesignModel(byte designModel);
 
-	void SetAlertBlink(cHSV blinkColour, uint16_t alertBlinkDuration, uint8_t onDutyCyle);
-	void SetAlertBlink(uint16_t alertBlinkDuration, uint8_t onDutyCyle);
+	void SetAlertBlink(cHSV blinkColour, uint16_t alertBlinkDuration);
+	void SetAlertBlink(uint16_t alertBlinkDuration);
 	void SetAlertBlink(cHSV blinkColour);
 	void SetDeadBlink(cHSV blinkColour, uint16_t deadBlinkDuration);
 	void SetDeadBlink(uint16_t deadBlinkDuration);

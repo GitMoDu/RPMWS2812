@@ -55,6 +55,7 @@ void RPMWS2812::BootAnimation(cHSV colourBoot)
 void RPMWS2812::Show()
 {
 	Leds.sync();
+	NeedsRefresh = false;
 }
 
 cRGB RPMWS2812::Scale(const cRGB colour, const byte scale)
@@ -104,7 +105,7 @@ void RPMWS2812::Pulse(const cHSV colour, const uint16_t durationMillis)
 void RPMWS2812::SetBrightness(const uint8_t brightness)
 {
 	GlobalBrightness = brightness;
-	UpdateConstants();
+	UpdateSectionsDynamic();
 }
 
 void RPMWS2812::Clear()
@@ -133,7 +134,7 @@ void RPMWS2812::Set(const cRGB colour, const  uint8_t startIndex, const uint8_t 
 	}
 }
 
-void RPMWS2812::UpdateRPMConstants()
+void RPMWS2812::UpdateSectionsConstant()//Elements that do not change with brightness
 {
 	RPM_Per_Led = RPM_Alert / LedCount;
 	RPM_AliveInt = RPM_Alive / RPM_Per_Led;
@@ -143,50 +144,31 @@ void RPMWS2812::UpdateRPMConstants()
 	{
 		Sections[i].Begin = Sections[i].BeginRPM / RPM_Per_Led;
 		Sections[i].End = Sections[i].EndRPM / RPM_Per_Led;
-
-		if (DesignModel & BACKGROUND_ENABLED)
-		{
-			SectionBackgroundBrightnessHelper = ((Sections[i].BackgroundColour.v*GlobalBrightness) / 255);
-		}
-
-		if (DesignModel & BACKGROUND_ENABLED)
-		{
-			if (DesignModel & SUB_PIXEL_HIGH_RANGE_ENABLED)
-			{
-				Sections[i].OverflowRangeBackground = ExtendedOverflowRange;
-			}
-			else
-			{
-				Sections[i].OverflowRangeBackground = (uint8_t)constrain((GlobalBrightness - SectionBackgroundBrightnessHelper), 0, 255);
-			}
-		}
-		else
-		{
-			if (DesignModel & SUB_PIXEL_HIGH_RANGE_ENABLED)
-			{
-				Sections[i].OverflowRangeBackground = (uint8_t)constrain(ExtendedOverflowRange - ColourClear.v, 0, 255);
-			}
-			else
-			{
-				Sections[i].OverflowRangeBackground = (uint8_t)constrain((GlobalBrightness - ColourClear.v), 0, 255);
-			}
-		}
-
-		if (DesignModel & SUB_PIXEL_HIGH_RANGE_ENABLED)
-		{
-			Sections[i].OverflowRangeMarker = (uint8_t)constrain(ExtendedOverflowRange - Sections[i].MarkerColour.v, 0, 255);
-		}
-		else
-		{
-			Sections[i].OverflowRangeMarker = (uint8_t)(uint8_t)constrain(GlobalBrightness - Sections[i].MarkerColour.v, 0, 255);
-		}
-
 	}
+}
+
+uint8_t RPMWS2812::BrightnessAdjust(uint8_t value)
+{
+	return map(value * GlobalBrightness, 0, UINT16_MAXVALUE, 0, UINT8_MAXVALUE);
+}
+
+void RPMWS2812::UpdateSectionsDynamic()
+{
+	for (uint8_t i = 0; i < SectionCount; i++)
+	{
+		//Fill in brightness adjusted colours. 
+		//This prevents lots of calculations while brightness is constant.
+		Sections[i].BackgroundColourBrightness = BrightnessAdjust(Sections[i].BackgroundColour.v);
+		Sections[i].MarkerColourBrightness = max(Sections[i].BackgroundColourBrightness, BrightnessAdjust(Sections[i].MarkerColour.v));
+		Sections[i].FillColourBrightness = max(Sections[i].MarkerColourBrightness, BrightnessAdjust(Sections[i].FillColour.v));
+	}
+
+	NeedsRefresh = true;
 }
 
 void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bool autoRefresh)
 {
-	bool Changed = RPM_Latest != rpm;
+	NeedsRefresh = RPM_Latest != rpm;
 
 	RPM_Latest = min(rpm, RPM_Alert);
 
@@ -194,7 +176,7 @@ void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bo
 
 	UpdateSections(timeStamp);
 
-	if (autoRefresh)
+	if (NeedsRefresh && autoRefresh)
 	{
 		Show();
 	}
@@ -206,7 +188,8 @@ void RPMWS2812::SetSection(const uint16_t beginRPM, const uint16_t endRPM,
 	LedSection NewSection;
 	NewSection.Set(beginRPM, endRPM, fillColour, backgroundColour, markerColour);
 	Sections[SectionCount++] = NewSection;
-	UpdateRPMConstants();
+	UpdateSectionsConstant();
+	UpdateSectionsDynamic();
 }
 
 void RPMWS2812::ClearSections()
@@ -220,149 +203,136 @@ void RPMWS2812::SetDesignModel(byte designModel)
 	UpdateSections(0);
 }
 
+
+uint8_t RPMWS2812::FlashingCurve(const uint8_t scale, const uint8_t value)
+{
+#define ARC_ALERT_BLINK_STEP_MARGIN 40 //Prevents aliasing at low periods by increasing the time spent on max brightness
+#define ARC_ALERT_BLINK_STEP_DEAD 160 //Makes the flashes even more prominent.
+
+	return BrightnessAdjust(map(value *
+		map(min(max(0, scale - ARC_ALERT_BLINK_STEP_DEAD), UINT8_MAXVALUE - ARC_ALERT_BLINK_STEP_MARGIN - ARC_ALERT_BLINK_STEP_DEAD),
+			0, UINT8_MAXVALUE - ARC_ALERT_BLINK_STEP_MARGIN - ARC_ALERT_BLINK_STEP_DEAD, 0, UINT8_MAXVALUE),
+		0, UINT16_MAXVALUE, 0, UINT8_MAXVALUE));
+}
+
+uint8_t RPMWS2812::WarningCurve(const uint8_t scale, const uint8_t value)
+{
+	if (scale < INT8_MAXVALUE)
+	{
+		return BrightnessAdjust(map(value * map(scale, 0, INT8_MAXVALUE, 0, UINT8_MAXVALUE), 0, UINT16_MAXVALUE, 0, UINT8_MAXVALUE));
+	}
+	else
+	{
+		return BrightnessAdjust(map(value * map(UINT8_MAXVALUE - scale, 0, INT8_MAXVALUE, 0, UINT8_MAXVALUE), 0, UINT16_MAXVALUE, 0, UINT8_MAXVALUE));
+	}
+}
+
+void RPMWS2812::BlinkAlertUpdate(const uint32_t timeStamp)
+{
+	if (RPM_BlinkTimeStamp == 0)//New cycle, time to start fresh;
+	{
+		RPM_BlinkTimeStamp = timeStamp;
+		SetAllHSV(ColourClear);
+	}
+	else
+	{
+		ProgressHelper = map(timeStamp - RPM_BlinkTimeStamp, 0, AlertBlinkDuration, 0, UINT8_MAXVALUE);
+		if (ProgressHelper == UINT8_MAXVALUE)
+		{
+			RPM_BlinkTimeStamp = 0;//End of the flash cycle, start again.
+		}
+
+		SetAllHSV({ ColourAlertBlink.h , ColourAlertBlink.s, FlashingCurve(ProgressHelper, ColourAlertBlink.v) });
+	}
+}
+
+void RPMWS2812::BlinkDeadUpdate(const uint32_t timeStamp)
+{
+	if (RPM_BlinkTimeStamp == 0)//New cycle, time to start fresh;
+	{
+		RPM_BlinkTimeStamp = timeStamp;
+		SetAllHSV(ColourClear);
+	}
+	else
+	{
+		ProgressHelper = map(timeStamp - RPM_BlinkTimeStamp, 0, DeadBlinkDuration, 0, UINT8_MAXVALUE);
+		if (ProgressHelper == UINT8_MAXVALUE)
+		{
+			RPM_BlinkTimeStamp = 0;//End of the flash cycle, start again.
+		}
+
+		SetAllHSV({ ColourDeadBlink.h , ColourDeadBlink.s, WarningCurve(ProgressHelper,ColourDeadBlink.v) });
+	}
+}
+
+void RPMWS2812::FillUpdate1(const uint32_t timeStamp)
+{
+	for (uint8_t j = 0; j < SectionCount; j++)
+	{
+		for (uint8_t i = Sections[j].Begin; i < Sections[j].End; i++)
+		{
+			if (i < RPM_Int)//Filled pixel
+			{
+				RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, Sections[j].FillColourBrightness);
+			}
+			else if (i > RPM_Int)//Background pixel
+			{
+				if (DesignModel & MARKERS_ENABLED && i == Sections[j].Begin)
+				{
+					RGBValue.SetHSV(Sections[j].MarkerColour.h, Sections[j].MarkerColour.s, Sections[j].MarkerColourBrightness);
+				}
+				else if (DesignModel & BACKGROUND_ENABLED)
+				{
+					RGBValue.SetHSV(Sections[j].BackgroundColour.h, Sections[j].BackgroundColour.s, Sections[j].BackgroundColourBrightness);
+				}
+				else
+				{
+					RGBValue.SetHSV(ColourClear.h, ColourClear.s, ColourClear.v);
+				}
+			}
+			else //Overflow pixel
+			{
+				ProgressHelper = map(RPM_Latest - (RPM_Int * RPM_Per_Led), 0, RPM_Per_Led, 0, UINT8_MAXVALUE);
+				if (DesignModel & SUB_PIXEL_ENABLED)
+				{
+					if (DesignModel & MARKERS_ENABLED && i == Sections[j].Begin)//Overflow on marker pixel, slightly different maths.
+					{
+						RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, map(ProgressHelper,
+							0, UINT8_MAXVALUE,
+							Sections[j].MarkerColourBrightness, Sections[j].FillColourBrightness));
+					}
+					else
+					{
+						RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, map(ProgressHelper,
+							0, UINT8_MAXVALUE,
+							Sections[j].BackgroundColourBrightness, Sections[j].FillColourBrightness));
+					}
+				}
+				else
+				{
+					RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, Sections[j].FillColourBrightness);
+				}
+			}
+
+			Leds.set_crgb_at(i, RGBValue);
+		}
+	}
+}
+
 void RPMWS2812::UpdateSections(const uint32_t timeStamp)
 {
 	if (RPM_Int >= RPM_AlertInt)
 	{
-		if (RPM_BlinkTimeStamp == 0)
-		{
-			RPM_BlinkTimeStamp = timeStamp;
-			SetAllHSV(ColourClear);
-		}
-		else
-		{
-			if (timeStamp - RPM_BlinkTimeStamp > 0)
-			{
-				BlinkProgress = constrain(((timeStamp - RPM_BlinkTimeStamp) * 255) / AlertBlinkDuration, 0, 255);
-			}
-			else
-			{
-				BlinkProgress = 0;
-			}
-
-			if (BlinkProgress < AlertBlinkDutyCycle)
-			{
-				SetAllHSV({ ColourAlertBlink.h , ColourAlertBlink.s, constrain((((uint16_t)constrain((((uint16_t)ColourAlertBlink.v * (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)) / 255), 0, 255)
-					* (uint16_t)constrain((((uint16_t)BlinkProgress* 255) / (uint16_t)AlertBlinkDutyCycle), 0, 255)) / 255), 0, 255) });
-			}
-			else
-			{
-				SetAllHSV(ColourClear);
-			}
-
-			if (BlinkProgress == 255)
-			{
-				RPM_BlinkTimeStamp = 0;
-			}
-		}
+		BlinkAlertUpdate(timeStamp);
 	}
 	else if (RPM_Latest < RPM_Alive)
 	{
-		if (RPM_BlinkTimeStamp == 0)
-		{
-			RPM_BlinkTimeStamp = timeStamp;
-			SetAllHSV(ColourClear);
-		}
-		else
-		{
-			if (timeStamp - RPM_BlinkTimeStamp > 0)
-			{
-				BlinkProgress = constrain(((timeStamp - RPM_BlinkTimeStamp) * 255) / DeadBlinkDuration, 0, 255);
-			}
-			else
-			{
-				BlinkProgress = 0;
-			}
-
-			uint8_t DeadProgress;
-			if (BlinkProgress < 127)
-			{
-				DeadProgress = constrain((((uint16_t)BlinkProgress * 255) / (uint16_t)127), 0, 255);
-			}
-			else
-			{
-				DeadProgress = constrain((((255 - (uint16_t)BlinkProgress) * 255) / (uint16_t)127), 0, 255);
-			}
-
-			SetAllHSV({ ColourDeadBlink.h , ColourDeadBlink.s, constrain((
-				((uint16_t)constrain((((uint16_t)ColourDeadBlink.v 
-					* (uint16_t)max(ARC_ALERT_MIN_SCALE, GlobalBrightness)
-				) / 255), 0, 255)  
-					* (uint16_t)DeadProgress)) /255, 0 ,255)});
-
-			if (BlinkProgress == 255)
-			{
-				RPM_BlinkTimeStamp = 0;
-			}
-		}
+		BlinkDeadUpdate(timeStamp);
 	}
 	else
 	{
-		RPM_BlinkTimeStamp = 0;
-		for (uint8_t j = 0; j < SectionCount; j++)
-		{
-			if (DesignModel & BACKGROUND_ENABLED)
-			{
-				SectionBackgroundBrightnessHelper = ((Sections[j].BackgroundColour.v*GlobalBrightness) / 255);
-			}
-
-			for (uint8_t i = Sections[j].Begin; i < Sections[j].End; i++)
-			{
-				if (DesignModel & MARKERS_ENABLED && i == Sections[j].Begin && RPM_Int < Sections[j].Begin)
-				{
-					RGBValue.SetHSV(Sections[j].MarkerColour.h, Sections[j].MarkerColour.s, Sections[j].MarkerColour.v);
-				}
-				else if (i < RPM_Int)
-				{
-					RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, GlobalBrightness);
-				}
-				else if (i > RPM_Int)
-				{
-					if (DesignModel & BACKGROUND_ENABLED)
-					{
-						RGBValue.SetHSV(Sections[j].BackgroundColour.h, Sections[j].BackgroundColour.s, SectionBackgroundBrightnessHelper);
-					}
-					else
-					{
-						RGBValue.SetHSV(ColourClear.h, ColourClear.s, ColourClear.v);
-					}
-
-				}
-				else //Overflow pixel
-				{
-					if (DesignModel & SUB_PIXEL_ENABLED)
-					{
-						RPM_FloorScaled = RPM_Int * RPM_Per_Led;
-						RPM_Overflow = RPM_Latest - RPM_FloorScaled;
-
-						if (DesignModel & MARKERS_ENABLED && i == Sections[j].Begin)//Overflow on marker pixel, slightly different maths.
-						{
-							RPM_PixelOverflow = constrain((uint8_t)((RPM_Overflow * Sections[j].OverflowRangeMarker) / RPM_Per_Led), 0, 255);
-							RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, Sections[j].MarkerColour.v + RPM_PixelOverflow);
-						}
-						else
-						{
-							RPM_PixelOverflow = constrain((uint8_t)((RPM_Overflow * Sections[j].OverflowRangeBackground) / RPM_Per_Led), 0, 255);
-
-							if (DesignModel & BACKGROUND_ENABLED)
-							{
-								RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, SectionBackgroundBrightnessHelper + RPM_PixelOverflow);
-							}
-							else
-							{
-								RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, ColourClear.v + RPM_PixelOverflow);
-							}
-						}
-					}
-					else
-					{
-						RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, GlobalBrightness);
-					}
-				}
-
-				Leds.set_crgb_at(i, RGBValue);
-			}
-		}
+		RPM_BlinkTimeStamp = 0; //Resets the blinking animations.
+		FillUpdate1(timeStamp);
 	}
 }
 
@@ -370,7 +340,7 @@ void RPMWS2812::SetRangeRPM(const uint16_t aliveRPM, const uint16_t maxRPM)
 {
 	RPM_Alive = aliveRPM;
 	RPM_Alert = maxRPM;
-	UpdateRPMConstants();
+	UpdateSectionsConstant();
 }
 
 void RPMWS2812::SetDeadBlink(uint16_t deadBlinkDuration)
@@ -389,27 +359,20 @@ void RPMWS2812::SetDeadBlink(cHSV blinkColour)
 	ColourAlertBlink = blinkColour;
 }
 
-void RPMWS2812::SetAlertBlink(uint16_t alertBlinkDuration, uint8_t onDutyCyle)
+void RPMWS2812::SetAlertBlink(uint16_t alertBlinkDuration)
 {
 	AlertBlinkDuration = alertBlinkDuration;
-	AlertBlinkDutyCycle = onDutyCyle;
 }
 
-void RPMWS2812::SetAlertBlink(cHSV blinkColour, uint16_t alertBlinkDuration, uint8_t onDutyCyle)
+void RPMWS2812::SetAlertBlink(cHSV blinkColour, uint16_t alertBlinkDuration)
 {
 	ColourAlertBlink = blinkColour;
 	AlertBlinkDuration = alertBlinkDuration;
-	AlertBlinkDutyCycle = onDutyCyle;
 }
 
 void RPMWS2812::SetAlertBlink(cHSV blinkColour)
 {
 	ColourAlertBlink = blinkColour;
-}
-
-void RPMWS2812::UpdateConstants()
-{
-	UpdateRPMConstants();
 }
 
 void RPMWS2812::SetExtendedOverflowRange(uint8_t range)
@@ -454,5 +417,3 @@ String RPMWS2812::Debug()
 
 	return Debug;
 }
-
-
