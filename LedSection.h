@@ -19,6 +19,9 @@ struct LedSection {
 	uint8_t OverflowRangeBackground, OverflowRangeMarker;
 
 	cHSV FillColour, BackgroundColour, MarkerColour;
+
+	uint8_t FillColourBrightness, BackgroundColourBrightness, MarkerColourBrightness;
+
 	void Set(const uint16_t beginRPM, const  uint16_t endRPM,
 		const cHSV fillColour,
 		const cHSV backgroundColour = COLOUR_NONE,
@@ -30,6 +33,10 @@ struct LedSection {
 			FillColour = fillColour;
 			BackgroundColour = backgroundColour;
 			MarkerColour = markerColour;
+
+			FillColourBrightness = FillColour.v;
+			BackgroundColourBrightness = BackgroundColour.v;
+			MarkerColourBrightness = MarkerColour.v;
 	}
 };
 
