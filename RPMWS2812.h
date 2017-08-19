@@ -10,6 +10,7 @@
 #define _RPMWS2812_h
 
 #include <Arduino.h>
+#define USE_HSV
 #include <WS2812.h>
 
 #include "LedSection.h"
