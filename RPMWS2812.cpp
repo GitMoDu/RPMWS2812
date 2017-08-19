@@ -121,9 +121,8 @@ void RPMWS2812::SetAll(cRGB colour)
 
 void RPMWS2812::SetAllHSV(cHSV colour)
 {
-	cRGB ColourRGB;
-	ColourRGB.SetHSV(colour.h, colour.s, colour.v);
-	Set(ColourRGB, 0, LedCount);
+	RGBValueHelper.SetHSV(colour.h, colour.s, colour.v);
+	Set(RGBValueHelper, 0, LedCount);
 }
 
 void RPMWS2812::Set(const cRGB colour, const  uint8_t startIndex, const uint8_t endIndex)
@@ -273,21 +272,21 @@ void RPMWS2812::FillUpdate1(const uint32_t timeStamp)
 		{
 			if (i < RPM_Int)//Filled pixel
 			{
-				RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, Sections[j].FillColourBrightness);
+				RGBValueHelper.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, Sections[j].FillColourBrightness);
 			}
 			else if (i > RPM_Int)//Background pixel
 			{
 				if (DesignModel & MARKERS_ENABLED && i == Sections[j].Begin)
 				{
-					RGBValue.SetHSV(Sections[j].MarkerColour.h, Sections[j].MarkerColour.s, Sections[j].MarkerColourBrightness);
+					RGBValueHelper.SetHSV(Sections[j].MarkerColour.h, Sections[j].MarkerColour.s, Sections[j].MarkerColourBrightness);
 				}
 				else if (DesignModel & BACKGROUND_ENABLED)
 				{
-					RGBValue.SetHSV(Sections[j].BackgroundColour.h, Sections[j].BackgroundColour.s, Sections[j].BackgroundColourBrightness);
+					RGBValueHelper.SetHSV(Sections[j].BackgroundColour.h, Sections[j].BackgroundColour.s, Sections[j].BackgroundColourBrightness);
 				}
 				else
 				{
-					RGBValue.SetHSV(ColourClear.h, ColourClear.s, ColourClear.v);
+					RGBValueHelper.SetHSV(ColourClear.h, ColourClear.s, ColourClear.v);
 				}
 			}
 			else //Overflow pixel
@@ -297,24 +296,24 @@ void RPMWS2812::FillUpdate1(const uint32_t timeStamp)
 				{
 					if (DesignModel & MARKERS_ENABLED && i == Sections[j].Begin)//Overflow on marker pixel, slightly different maths.
 					{
-						RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, map(ProgressHelper,
+						RGBValueHelper.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, map(ProgressHelper,
 							0, UINT8_MAXVALUE,
 							Sections[j].MarkerColourBrightness, Sections[j].FillColourBrightness));
 					}
 					else
 					{
-						RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, map(ProgressHelper,
+						RGBValueHelper.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, map(ProgressHelper,
 							0, UINT8_MAXVALUE,
 							Sections[j].BackgroundColourBrightness, Sections[j].FillColourBrightness));
 					}
 				}
 				else
 				{
-					RGBValue.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, Sections[j].FillColourBrightness);
+					RGBValueHelper.SetHSV(Sections[j].FillColour.h, Sections[j].FillColour.s, Sections[j].FillColourBrightness);
 				}
 			}
 
-			Leds.set_crgb_at(i, RGBValue);
+			Leds.set_crgb_at(i, RGBValueHelper);
 		}
 	}
 }
