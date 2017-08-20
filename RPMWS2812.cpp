@@ -209,7 +209,7 @@ uint8_t RPMWS2812::FlashingCurve(const uint8_t scale, const uint8_t value)
 #define ARC_ALERT_BLINK_STEP_DEAD 160 //Makes the flashes even more prominent.
 
 	return BrightnessAdjust(map(value *
-		map(min(max(0, scale - ARC_ALERT_BLINK_STEP_DEAD), UINT8_MAXVALUE - ARC_ALERT_BLINK_STEP_MARGIN - ARC_ALERT_BLINK_STEP_DEAD),
+		map(min(max(0, (int16_t)scale - ARC_ALERT_BLINK_STEP_DEAD), UINT8_MAXVALUE - ARC_ALERT_BLINK_STEP_MARGIN - ARC_ALERT_BLINK_STEP_DEAD),
 			0, UINT8_MAXVALUE - ARC_ALERT_BLINK_STEP_MARGIN - ARC_ALERT_BLINK_STEP_DEAD, 0, UINT8_MAXVALUE),
 		0, UINT16_MAXVALUE, 0, UINT8_MAXVALUE));
 }
