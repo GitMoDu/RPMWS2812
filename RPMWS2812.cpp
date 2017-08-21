@@ -104,8 +104,11 @@ void RPMWS2812::Pulse(const cHSV colour, const uint16_t durationMillis)
 
 void RPMWS2812::SetBrightness(const uint8_t brightness)
 {
-	GlobalBrightness = brightness;
-	UpdateSectionsDynamic();
+	if (GlobalBrightness != brightness)
+	{
+		GlobalBrightness = brightness;
+		UpdateSectionsDynamic();
+	}	
 }
 
 void RPMWS2812::Clear()
