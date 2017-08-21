@@ -54,7 +54,10 @@ void RPMWS2812::BootAnimation(cHSV colourBoot)
 
 void RPMWS2812::Show()
 {
-	Leds.sync();
+	if (NeedsRefresh)
+	{
+		Leds.sync();
+	}	
 	NeedsRefresh = false;
 }
 
@@ -170,7 +173,7 @@ void RPMWS2812::UpdateSectionsDynamic()
 
 void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bool autoRefresh)
 {
-	NeedsRefresh = RPM_Latest != rpm;
+	NeedsRefresh = NeedsRefresh || RPM_Latest != rpm;
 
 	RPM_Latest = min(rpm, RPM_Alert);
 
@@ -178,7 +181,7 @@ void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bo
 
 	UpdateSections(timeStamp);
 
-	if (NeedsRefresh && autoRefresh)
+	if (autoRefresh)
 	{
 		Show();
 	}
