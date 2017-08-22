@@ -15,23 +15,28 @@
 //#include <Doge.h>
 #include "LedSection.h"
 
-#define MAX_LED_COUNT 16
-
 #define SUB_PIXEL_ENABLED B00000001
 #define MARKERS_ENABLED B00000010
 #define BACKGROUND_ENABLED B00000100
 #define SUB_PIXEL_HIGH_RANGE_ENABLED B00001000
 
+#ifndef MAX_LED_COUNT
+#define MAX_LED_COUNT 30
+#endif
+#ifndef MAX_SECTION_COUNT
+#define MAX_SECTION_COUNT 10
+#endif
+
 
 class RPMWS2812
 {
-
 private:
-
 #define UINT8_MAXVALUE 255
 #define INT8_MAXVALUE 127
 
 #define UINT16_MAXVALUE 65025
+
+
 
 #define ARC_DEAD_BLINK_DURATION_DEFAULT 800
 #define ARC_ALERT_BLINK_DURATION_DEFAULT 40
@@ -91,7 +96,7 @@ private:
 	bool NeedsRefresh = true;
 
 	//Down to 1 LED per Section
-	LedSection Sections[MAX_LED_COUNT];
+	LedSection Sections[MAX_SECTION_COUNT];
 	uint8_t SectionCount;
 
 	byte DesignModel = SUB_PIXEL_ENABLED;
