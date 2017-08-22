@@ -10,7 +10,7 @@
 
 bool RPMWS2812::Setup(uint8_t ledCount, uint8_t ledDataPin)
 {
-	if (ledCount <= MAX_LED_COUNT )
+	if (ledCount <= MAX_LED_COUNT)
 	{
 		LedCount = ledCount;
 		LedDataPin = ledDataPin;
@@ -172,29 +172,25 @@ void RPMWS2812::UpdateSectionsDynamic()
 }
 
 void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bool autoRefresh)
-{
+{	
 	if (RPM_Latest != min(rpm, RPM_Alert))
 	{
 		NeedsRefresh = true;
 		RPM_Latest = min(rpm, RPM_Alert);
 		RPM_Int = RPM_Latest / RPM_Per_Led;
 
-		if (RPM_Int < RPM_AlertInt &&
-			RPM_Int >= RPM_Alive)
+		if (RPM_Int >= RPM_AlertInt)
 		{
-			if (RPM_Int >= RPM_AlertInt)
-			{
-				BlinkAlertUpdate(timeStamp);
-			}
-			else if (RPM_Latest < RPM_Alive)
-			{
-				BlinkDeadUpdate(timeStamp);
-			}
-			else
-			{
-				RPM_BlinkTimeStamp = 0; //Resets the blinking animations.
-				FillUpdate1();
-			}
+			BlinkAlertUpdate(timeStamp);
+		}
+		else if (RPM_Latest < RPM_Alive)
+		{
+			BlinkDeadUpdate(timeStamp);
+		}
+		else
+		{
+			RPM_BlinkTimeStamp = 0; //Resets the blinking animations.
+			FillUpdate1();
 		}
 	}
 	else
@@ -209,7 +205,7 @@ void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bo
 			BlinkDeadUpdate(timeStamp);
 			NeedsRefresh = true;
 		}
-	}	
+	}
 
 	if (autoRefresh)
 	{
