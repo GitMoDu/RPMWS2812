@@ -12,7 +12,6 @@
 #include <Arduino.h>
 #define USE_HSV
 #include <WS2812.h>
-//#include <Doge.h>
 #include "LedSection.h"
 
 #define SUB_PIXEL_ENABLED B00000001
