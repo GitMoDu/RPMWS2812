@@ -219,11 +219,14 @@ void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bo
 void RPMWS2812::SetSection(const uint16_t beginRPM, const uint16_t endRPM,
 	const cHSV fillColour, const  cHSV backgroundColour, const  cHSV markerColour)
 {
-	LedSection NewSection;
-	NewSection.Set(beginRPM, endRPM, fillColour, backgroundColour, markerColour);
-	Sections[SectionCount++] = NewSection;
-	UpdateSectionsConstant();
-	UpdateSectionsDynamic();
+	if (SectionCount < MAX_SECTION_COUNT)
+	{
+		LedSection NewSection;
+		NewSection.Set(beginRPM, endRPM, fillColour, backgroundColour, markerColour);
+		Sections[SectionCount++] = NewSection;
+		UpdateSectionsConstant();
+		UpdateSectionsDynamic();
+	}
 }
 
 void RPMWS2812::ClearSections()
