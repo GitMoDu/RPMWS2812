@@ -10,8 +10,7 @@
 
 bool RPMWS2812::Setup(uint8_t ledCount, uint8_t ledDataPin)
 {
-
-	if (ledCount < MAX_LED_COUNT)
+	if (ledCount <= MAX_LED_COUNT )
 	{
 		LedCount = ledCount;
 		LedDataPin = ledDataPin;
@@ -57,7 +56,7 @@ void RPMWS2812::Show()
 	if (NeedsRefresh)
 	{
 		Leds.sync();
-	}	
+	}
 	NeedsRefresh = false;
 }
 
@@ -111,7 +110,7 @@ void RPMWS2812::SetBrightness(const uint8_t brightness)
 	{
 		GlobalBrightness = brightness;
 		UpdateSectionsDynamic();
-	}	
+	}
 }
 
 void RPMWS2812::Clear()
