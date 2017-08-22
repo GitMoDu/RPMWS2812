@@ -56,8 +56,9 @@ void RPMWS2812::Show()
 	if (NeedsRefresh)
 	{
 		Leds.sync();
+		NeedsRefresh = false;
 	}
-	NeedsRefresh = false;
+	
 }
 
 cRGB RPMWS2812::Scale(const cRGB colour, const byte scale)
