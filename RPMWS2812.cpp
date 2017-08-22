@@ -172,13 +172,43 @@ void RPMWS2812::UpdateSectionsDynamic()
 
 void RPMWS2812::UpdateRPM(const uint16_t rpm, const uint32_t timeStamp, const bool autoRefresh)
 {
-	NeedsRefresh = NeedsRefresh || RPM_Latest != rpm;
+	if (RPM_Latest != min(rpm, RPM_Alert))
+	{
+		NeedsRefresh = true;
+		RPM_Latest = min(rpm, RPM_Alert);
+		RPM_Int = RPM_Latest / RPM_Per_Led;
 
-	RPM_Latest = min(rpm, RPM_Alert);
-
-	RPM_Int = RPM_Latest / RPM_Per_Led;
-
-	UpdateSections(timeStamp);
+		if (RPM_Int < RPM_AlertInt &&
+			RPM_Int >= RPM_Alive)
+		{
+			if (RPM_Int >= RPM_AlertInt)
+			{
+				BlinkAlertUpdate(timeStamp);
+			}
+			else if (RPM_Latest < RPM_Alive)
+			{
+				BlinkDeadUpdate(timeStamp);
+			}
+			else
+			{
+				RPM_BlinkTimeStamp = 0; //Resets the blinking animations.
+				FillUpdate1();
+			}
+		}
+	}
+	else
+	{
+		if (RPM_Int >= RPM_AlertInt)
+		{
+			BlinkAlertUpdate(timeStamp);
+			NeedsRefresh = true;
+		}
+		else if (RPM_Latest < RPM_Alive)
+		{
+			BlinkDeadUpdate(timeStamp);
+			NeedsRefresh = true;
+		}
+	}	
 
 	if (autoRefresh)
 	{
@@ -204,7 +234,8 @@ void RPMWS2812::ClearSections()
 void RPMWS2812::SetDesignModel(byte designModel)
 {
 	DesignModel = designModel;
-	UpdateSections(0);
+	UpdateSectionsConstant();
+	UpdateSectionsDynamic();
 }
 
 
@@ -269,7 +300,7 @@ void RPMWS2812::BlinkDeadUpdate(const uint32_t timeStamp)
 	}
 }
 
-void RPMWS2812::FillUpdate1(const uint32_t timeStamp)
+void RPMWS2812::FillUpdate1()
 {
 	for (uint8_t j = 0; j < SectionCount; j++)
 	{
@@ -320,23 +351,6 @@ void RPMWS2812::FillUpdate1(const uint32_t timeStamp)
 
 			Leds.set_crgb_at(i, RGBValueHelper);
 		}
-	}
-}
-
-void RPMWS2812::UpdateSections(const uint32_t timeStamp)
-{
-	if (RPM_Int >= RPM_AlertInt)
-	{
-		BlinkAlertUpdate(timeStamp);
-	}
-	else if (RPM_Latest < RPM_Alive)
-	{
-		BlinkDeadUpdate(timeStamp);
-	}
-	else
-	{
-		RPM_BlinkTimeStamp = 0; //Resets the blinking animations.
-		FillUpdate1(timeStamp);
 	}
 }
 

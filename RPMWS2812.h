@@ -102,11 +102,10 @@ private:
 
 	void UpdateSectionsDynamic();
 	void UpdateSectionsConstant();
-	void UpdateSections(const uint32_t timeStamp);
 
 	void BlinkAlertUpdate(const uint32_t timeStamp);
 	void BlinkDeadUpdate(const uint32_t timeStamp);
-	void FillUpdate1(const uint32_t timeStamp);
+	void FillUpdate1();
 
 	uint8_t BrightnessAdjust(uint8_t value);
 
