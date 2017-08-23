@@ -37,7 +37,7 @@ void RPMWS2812::BootAnimation(cHSV colourBoot, uint8_t animationBrightness)
 
 	Clear();
 	SetAllHSV(ColourBootStart);
-	Show();
+	Show(true);
 	delay(BootDelayStep / 4);
 	DirectAnimate(ColourBootStart, ColourBootPeak, BootDelayStep);
 	DirectAnimate(ColourBootPeak, ColourBootMiddle, BootDelayStep);
@@ -94,7 +94,7 @@ void RPMWS2812::DirectAnimate(const cHSV colourStart, const cHSV colourEnd, cons
 		AnimatedHSV = CrossfadedHSB(colourStart, colourEnd, i);
 		AnimatedRGB.SetHSV(AnimatedHSV.h, AnimatedHSV.s, AnimatedHSV.v);
 		SetAll(AnimatedRGB);
-		Show();
+		Show(true);
 		delay(Step);
 	}
 }
@@ -117,7 +117,7 @@ void RPMWS2812::SetBrightness(const uint8_t brightness)
 void RPMWS2812::Clear()
 {
 	SetAllHSV(ColourClear);
-	Show();
+	Show(true);
 }
 
 void RPMWS2812::SetAll(cRGB colour)
