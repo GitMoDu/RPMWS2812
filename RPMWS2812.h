@@ -141,7 +141,7 @@ public:
 	void SetSection(const uint16_t beginRPM, const uint16_t endRPM, const cHSV fillColour,
 		const cHSV backgroundColour = COLOUR_NONE,
 		const cHSV markerColour = COLOUR_NONE);
-	void Show();
+	void Show(const bool forceShow = false);
 	void Pulse(const cHSV colour, const uint16_t durationMillis);
 };
 

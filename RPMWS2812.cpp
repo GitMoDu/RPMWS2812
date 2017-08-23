@@ -51,9 +51,9 @@ void RPMWS2812::BootAnimation(cHSV colourBoot)
 	BootAnimation(colourBoot, GlobalBrightness);
 }
 
-void RPMWS2812::Show()
+void RPMWS2812::Show(const bool forceShow)
 {
-	if (NeedsRefresh)
+	if (forceShow || NeedsRefresh)
 	{
 		Leds.sync();
 		NeedsRefresh = false;
